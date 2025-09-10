@@ -281,7 +281,7 @@ class ShadowWolf(Monster):
             xp_yield=150,
             description="A ghostly wolf, its form flickering like a dying flame. Dark, shifting symbols mark its ethereal fur."
         )
-        self.abilities.append(Ability("Shadow Bite", "A chilling bite that seems to drain your resolve.", mana_cost=5, status_effect={'type': 'attack_debuff', 'amount': -2, 'duration': 3}))
+        self.abilities.append(Ability("Shadow Bite", "A chilling bite that seems to drain your resolve.", mana_cost=5, status_effect={'type': 'attack_debuff', 'amount': 2, 'duration': 3}))
 
 class ShadowCultist(Monster):
     """A cultist who has delved deeper into shadow magic."""

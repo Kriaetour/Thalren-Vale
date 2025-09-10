@@ -57,6 +57,9 @@ class Quest:
         elif obj_type == 'explore':
             if player.location == self.objective.get('target'):
                 return True
+        elif obj_type == 'sabotage':
+            if self.progress >= 1:
+                return True
         
         return False
 
@@ -104,6 +107,10 @@ class Quest:
             if self.objective.get('target').lower() in target_name.lower():
                 self.progress = 1
                 print(f"[Quest Update: {self.name} {self.get_progress_string()}]")
+        elif current_obj_type == 'sabotage':
+            if self.objective.get('target').lower() in target_name.lower():
+                self.progress = 1
+                print(f"[Quest Update: {self.name} - Objective sabotaged!]")
 
     def complete(self, player, chosen_reward_option=None):
         """Gives the player the quest reward and updates their quest log."""

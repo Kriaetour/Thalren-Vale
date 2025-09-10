@@ -25,7 +25,7 @@ class QuestGenerator:
         Generates a specific Quest instance from a template.
         For now, we'll focus on 'kill' quests.
         """
-        if template.objective_type == 'kill':
+        if template.objective_type == 'kill': # --- KILL QUEST ---
             # Find a suitable monster and location near the player
             # This is a simple implementation; a real one might check distance
             
@@ -63,6 +63,24 @@ class QuestGenerator:
             if template.faction_reward:
                 reward['faction'] = template.faction_reward
 
+            return Quest(quest_name, quest_description, objective, reward)
+
+        elif template.objective_type == 'sabotage': # --- SABOTAGE QUEST ---
+            # Find a location that has the target station
+            possible_locations = []
+            for r_idx, row in enumerate(self.world["grid"]):
+                for c_idx, loc in enumerate(row):
+                    if template.target_category in loc.get("stations", []):
+                        possible_locations.append(loc)
+            
+            if not possible_locations:
+                return None # No suitable location found
+
+            target_location = random.choice(possible_locations)
+            quest_name = template.name_format.format(target=template.target_category, location_name=target_location['name'])
+            quest_description = template.description_format.format(target=template.target_category, location_name=target_location['name'])
+            objective = {'type': 'sabotage', 'target': template.target_category, 'location': target_location['name']}
+            reward = {'gold': template.reward_gold, 'xp': {template.xp_skill: template.reward_xp}, 'faction': template.faction_reward}
             return Quest(quest_name, quest_description, objective, reward)
 
         return None # Return None for unsupported quest types for now

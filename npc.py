@@ -20,33 +20,6 @@ class NPC:
         self.dialogue_night = None # Default to no special night dialogue
         self.current_location_key = None
 
-    def __setstate__(self, state):
-        """
-        Custom method to handle loading from older save files.
-        This is called when the object is unpickled.
-        """
-        self.__dict__.update(state)
-        if not hasattr(self, 'is_available'):
-            self.is_available = True
-        if not hasattr(self, 'level'):
-            self.level = 1
-        if not hasattr(self, 'pickpocket_loot'):
-            self.pickpocket_loot = []
-        if not hasattr(self, 'has_been_pickpocketed'):
-            self.has_been_pickpocketed = False
-        if not hasattr(self, 'personality'):
-            self.personality = {'friendliness': 5, 'grumpiness': 3, 'talkativeness': 5}
-        if not hasattr(self, 'memory'):
-            self.memory = []
-        if not hasattr(self, 'schedule'):
-            self.schedule = None
-        if not hasattr(self, 'current_location_key'):
-            self.current_location_key = None
-        if not hasattr(self, 'faction'):
-            self.faction = None
-        if not hasattr(self, 'dialogue_night'):
-            self.dialogue_night = None
-
     def record_interaction(self, interaction_type, turn_count, details=None):
         """Records an interaction in the NPC's memory."""
         self.memory.append({'type': interaction_type, 'turn': turn_count, 'details': details})

@@ -282,7 +282,7 @@ a_trade_of_shadows_quest = Quest(
     name="A Trade of Shadows",
     description="The Guild has asked you to escort a valuable caravan. Meet them at the crossroads south of the contested campfire.",
     objective={'type': 'decision', 'location': (10, 15)},
-    prerequisites=["The Hunter's Ultimatum"],
+    prerequisites=["Whispers Beneath the Ledger"],
     reward_choice=[
         {
             'description': "Guard the caravan against the Whispered Hand.",
@@ -500,6 +500,10 @@ kill_quest_templates = [
     QuestTemplate("Serpent Menace", "The Glimmering River is becoming too dangerous. A large {monster_name} has been spotted near {location_name}. Take care of it.", "kill", "river_serpent", 1, 100, 150, "Defense"),
     QuestTemplate("Dark Omens", "The Ashbound Cult is growing bolder. We've seen {monster_name}s performing dark rituals near {location_name}. Disrupt their activities by eliminating {count} of them.", "kill", "ashbound_cultist", 2, 150, 200, "Magic"),
     QuestTemplate("Restless Spirits", "The old ruins are more haunted than usual. The {monster_name}s are becoming aggressive. Put {count} of them to rest near {location_name}.", "kill", "spectral_wolf", 3, 120, 180, "Magic")
+]
+
+sabotage_quest_templates = [
+    QuestTemplate("Disrupt the Supply", "The bandits at {location_name} are using a {target} to repair their gear. A rival group wants you to sabotage it to weaken them.", "sabotage", "Anvil", count=1, reward_gold=150, reward_xp=100, xp_skill="Thieving", faction_reward={"bandits": -10, "whispered_hand": 5})
 ]
 
 # --- NPCs ---
@@ -732,7 +736,7 @@ thalren_vale_map_25x25[12][11]["npcs"] = [
         "The Guild Master looks over a large board of bounties and requests.", 
         "Looking for work, adventurer?", 
         quest_generator, 
-        kill_quest_templates, 
+        kill_quest_templates + sabotage_quest_templates, 
         personality={'friendliness': 6, 'grumpiness': 4, 'talkativeness': 5},
         faction="town_guard",
         reputation_quests=reputation_quest_templates

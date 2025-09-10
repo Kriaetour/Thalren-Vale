@@ -47,71 +47,6 @@ class Player(Character):
         firebolt = Ability("Firebolt", "Hurls a small bolt of fire at the enemy.", mana_cost=5, effect={'type': 'damage', 'amount': 20})
         self.abilities.append(firebolt)
 
-    def __setstate__(self, state):
-        """
-        Custom method to handle loading from older save files.
-        This is called when the object is unpickled.
-        """
-        self.__dict__.update(state)  # Apply the saved state
-
-        # --- Migration for skill system ---
-        if not hasattr(self, 'skills'):
-            self.skills = {}
-        
-        # Migrate from old "Combat" skill to new "Attack" and "Defense" skills
-        if "Combat" in self.skills:
-            combat_skill = self.skills.pop("Combat")
-            if "Attack" not in self.skills:
-                self.skills["Attack"] = Skill("Attack", level=combat_skill.level, xp=combat_skill.xp)
-            if "Defense" not in self.skills:
-                self.skills["Defense"] = Skill("Defense", level=combat_skill.level, xp=combat_skill.xp)
-        
-        # Ensure all default skills exist for saves that have skills but might be missing new ones
-        if "Attack" not in self.skills: self.skills["Attack"] = Skill("Attack")
-        if "Defense" not in self.skills: self.skills["Defense"] = Skill("Defense")
-        if "Agility" not in self.skills: self.skills["Agility"] = Skill("Agility")
-        if "Magic" not in self.skills: self.skills["Magic"] = Skill("Magic")
-        if "Crafting" not in self.skills: self.skills["Crafting"] = Skill("Crafting")
-        if "Fishing" not in self.skills: self.skills["Fishing"] = Skill("Fishing")
-        if "Woodcutting" not in self.skills: self.skills["Woodcutting"] = Skill("Woodcutting")
-        if "Cooking" not in self.skills: self.skills["Cooking"] = Skill("Cooking")
-        if "Thieving" not in self.skills: self.skills["Thieving"] = Skill("Thieving")
-        if "Herblore" not in self.skills: self.skills["Herblore"] = Skill("Herblore")
-        if "Smithing" not in self.skills: self.skills["Smithing"] = Skill("Smithing")
-        if "Smelting" not in self.skills: self.skills["Smelting"] = Skill("Smelting")
-        if "Mining" not in self.skills: self.skills["Mining"] = Skill("Mining")
-        if "Wordbinding" not in self.skills: self.skills["Wordbinding"] = Skill("Wordbinding")
-        if "Lockpicking" not in self.skills: self.skills["Lockpicking"] = Skill("Lockpicking")
-        if "Hunting" not in self.skills: self.skills["Hunting"] = Skill("Hunting")
-        if not hasattr(self, 'max_words_to_bind'): self.max_words_to_bind = 2
-
-        if not hasattr(self, 'active_quests'):
-            self.active_quests = []
-        if not hasattr(self, 'completed_quests'):
-            self.completed_quests = []
-        if not hasattr(self, 'mana'):
-            self.mana = 20
-        if not hasattr(self, 'max_mana'):
-            self.max_mana = 20
-        if not hasattr(self, 'abilities'):
-            self.abilities = []
-        if not hasattr(self, 'money'):
-            self.money = 0
-        if not hasattr(self, 'jail_time_remaining'):
-            self.jail_time_remaining = 0
-        if not hasattr(self, 'bank_items'):
-            self.bank_items = []
-        if not hasattr(self, 'known_recipes'):
-            self.known_recipes = []
-        if not hasattr(self, 'last_npc_talked_to'):
-            self.last_npc_talked_to = None
-        if not hasattr(self, 'bank_gold'):
-            self.bank_gold = 0
-        if not hasattr(self, 'factions'):
-            self.factions = {}
-        if not hasattr(self, 'skills_affected_this_turn'):
-            self.skills_affected_this_turn = set()
-
     def add_skill_xp(self, skill_name, amount):
         """Adds XP to a specific skill and handles leveling up."""
         if skill_name in self.skills:
@@ -140,10 +75,14 @@ class Player(Character):
 
     def change_faction_rep(self, faction_name, amount):
         """Changes the player's reputation with a specific faction."""
+        from event_manager import event_manager # Local import to avoid circular dependency
+
         if faction_name in self.factions:
+            old_standing = self.factions[faction_name].get_standing()
             self.factions[faction_name].change_reputation(amount)
-            standing = self.factions[faction_name].get_standing()
-            print(f"Your reputation with {self.factions[faction_name].name} has changed by {amount}. (New standing: {standing})")
+            new_standing = self.factions[faction_name].get_standing()
+            print(f"Your reputation with {self.factions[faction_name].name} has changed by {amount}. (New standing: {new_standing})")
+            event_manager.dispatch('on_faction_change', player=self, faction_name=faction_name, amount=amount, old_standing=old_standing, new_standing=new_standing)
         else:
             print(f"Warning: Attempted to change reputation with an unknown faction '{faction_name}'.")
 
@@ -165,6 +104,22 @@ class Player(Character):
         """Clears the set of skills affected in a turn."""
         self.skills_affected_this_turn.clear()
 
+    def print_combat_status(self, enemy):
+        """Prints a summary of player and enemy status during combat."""
+        player_effects = self.get_status_effects_string()
+        enemy_effects = enemy.get_status_effects_string()
+
+        content = [
+            f"Your Status:",
+            f"  HP: {self.health}/{self.max_health} | MP: {self.mana}/{self.max_mana}",
+            f"  Effects: {player_effects}",
+            "",
+            f"{enemy.name}'s Status:",
+            f"  HP: {enemy.health}/{enemy.max_health}",
+            f"  Effects: {enemy_effects}"
+        ]
+        print_bordered("Combat Status", content)
+
     def print_status(self, affected_skills=None):
         """Prints the player's current stats and equipment."""
         title = f"{self.name}'s Status"
@@ -173,6 +128,10 @@ class Player(Character):
             f"Atk: {self.attack_power} ({self.base_attack} base) | Def: {self.defense} ({self.base_defense} base)",
             f"Weapon: {self.weapon.name if self.weapon else 'None'} | Armor: {self.armor.name if self.armor else 'None'}",
         ]
+
+        effects_string = self.get_status_effects_string()
+        if effects_string != "None":
+            content.append(f"Active Effects: {effects_string}")
 
         # Determine which skills to show
         skills_to_display = []
