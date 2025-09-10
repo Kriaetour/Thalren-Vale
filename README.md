@@ -35,7 +35,7 @@ All player commands are processed through a dedicated `command_handler.py` modul
 The primary entry point for the game is the `main.py` script.
 
 ```bash
-python "c:\Users\brand\OneDrive\Documents\Py3 Files\Project 1 - Text-Based RPG\Thalren-Vale\src\main.py"
+python src/main.py
 ```
 
 An experimental Tkinter-based GUI is also under development (`gui_main.py`).
